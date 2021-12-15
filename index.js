@@ -1,9 +1,9 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql2/promise");
 
-startProgram();
+runProgram();
 
-async function startProgram() {
+async function runProgram() {
     const {choice} = await inquirer.prompt([{
         name: "choice",
         type: "list",
@@ -49,8 +49,44 @@ async function displayEmployees() {
   const [rows, fields] = await connection.execute("select * from employee;");
 
   console.table(rows);
+  runProgram();
 }
 
+function addEmployee() {
+    inquirer.prompt([
+        {
+            name: "firstName",
+            type: "input",
+            message: "Enter the employee's first name:"
+        },
+        {
+            name: "lastName",
+            type: "input",
+            message: "Enter the employee's last name:"
+        },
+        {
+            name: "employeeRole",
+            type: "input",
+            message: "Enter the employee's role ID:"
+        },
+        {
+            name: "employeeManager",
+            type: "input",
+            message: "Enter the employee's manager ID:"
+        }
+    ])
+    .then(function(answers){
+        console.log(answers);
+        const firstName = answers.firstName;
+        const lastName = answers.lastName;
+        const roleID = answers.employeeRole;
+        const managerID = answers.employeeManager;
+        const query = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUE (${firstName}, ${lastName}, ${roleID}, ${managerID})`;
+
+
+        runProgram()
+    })
+}
 
 
 
@@ -61,6 +97,7 @@ async function displayRoles() {
   const [rows, fields] = await connection.execute("select * from role;");
 
   console.table(rows);
+  runProgram();
 }
 
 
@@ -83,7 +120,7 @@ async function updateRole() {
     choices: newChoices
   }])
   console.log(choice)
-  
+
 }
 
 
@@ -94,4 +131,5 @@ async function displayDepartments() {
   const [rows, fields] = await connection.execute("select * from department;");
 
   console.table(rows);
+  runProgram();
 }
