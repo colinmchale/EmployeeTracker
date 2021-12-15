@@ -3,24 +3,24 @@ CREATE DATABASE employee_db;
 
 USE employee_db;
 
-CREATE TABLE employee (
+CREATE TABLE department (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  first_name VARCHAR(30),
-  last_name VARCHAR(30),
-  role_id INT,
-  manager_id INT
+  name VARCHAR(30)
 );
 
 CREATE TABLE role (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(30),
   salary DECIMAL,
-  department_id INT
+  department_id INT,
+  FOREIGN KEY (department_id) REFERENCES department(id)
 );
 
-CREATE TABLE department (
+CREATE TABLE employee (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(30)
+  first_name VARCHAR(30),
+  last_name VARCHAR(30),
+  role_id INT,
+  manager_id INT,
+  FOREIGN KEY (role_id) REFERENCES role(id)
 );
-
-insert into employee (id, first_name, last_name, role_id) values (1, 'Jason', 'Day', 1);

@@ -71,7 +71,19 @@ async function updateRole() {
   // query database
   const [rows, fields] = await connection.execute("select * from employee;");
 
-  console.table(rows);
+  let newChoices = rows.map(employee => ({name:employee.name, value:employee}))
+
+
+  console.table();
+
+  const {choice} = await inquirer.prompt([{
+    name: "choice",
+    type: "list",
+    message: "Which Employee Role would you like to update?",
+    choices: newChoices
+  }])
+  console.log(choice)
+  
 }
 
 
