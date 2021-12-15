@@ -1,11 +1,26 @@
-drop database if exists employee_db;
+DROP DATABASE IF EXISTS employee_db;
+CREATE DATABASE employee_db;
 
-create database employee_db;
+USE employee_db;
 
-create table employee(
-    id int primary key auto_increment,
-    name varchar(30),
-    role_id int,
+CREATE TABLE employee (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  first_name VARCHAR(30),
+  last_name VARCHAR(30),
+  role_id INT,
+  manager_id INT
 );
 
-insert into employee (id, name, role_id) values (1, 'Jason Day', 1)
+CREATE TABLE role (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(30),
+  salary DECIMAL,
+  department_id INT
+);
+
+CREATE TABLE department (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(30)
+);
+
+insert into employee (id, first_name, last_name, role_id) values (1, 'Jason', 'Day', 1);
