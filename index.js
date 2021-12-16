@@ -20,7 +20,7 @@ async function runProgram() {
                 addEmployee()
             break;
         case "Update Employee Role":
-                updateRole()
+                updateEmployeeRole()
             break;
         case "View All Roles":
                 displayRoles()
@@ -38,9 +38,7 @@ async function runProgram() {
         default:
             break;
     }
-
-
-}
+};
 
 async function displayEmployees() {
 
@@ -50,11 +48,18 @@ async function displayEmployees() {
 
   console.table(rows);
   runProgram();
-}
+};
 
-function addEmployee() {
-    inquirer.prompt([
-        {
+async function addEmployee() {
+
+    const connection = await mysql.createConnection({host:'localhost', user: 'root', database: 'employee_db'});
+  // query database
+const managers = await connection.execute("select * from employee;");
+
+const roles = await connection.execute("select * from role;");
+
+    const answers = await inquirer.prompt([
+        { 
             name: "firstName",
             type: "input",
             message: "Enter the employee's first name:"
@@ -66,43 +71,49 @@ function addEmployee() {
         },
         {
             name: "employeeRole",
-            type: "input",
-            message: "Enter the employee's role ID:"
+            type: "list",
+            message: "Select the employee's role:",
+            choices: roles.map((role) => {
+                return {
+                    name: role.title,
+                    value: role.id
+                }
+            })
         },
         {
             name: "employeeManager",
             type: "input",
-            message: "Enter the employee's manager ID:"
+            message: "Select the employee's manager:",
+            choices: managers.map((manager) => {
+                return {
+                    name: manager.first_name + " " + manager.last_name,
+                    value: manager.id
+                }
+            })
         }
     ])
-    .then(function(answers){
-        console.log(answers);
-        const firstName = answers.firstName;
-        const lastName = answers.lastName;
-        const roleID = answers.employeeRole;
-        const managerID = answers.employeeManager;
-        const query = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUE (${firstName}, ${lastName}, ${roleID}, ${managerID})`;
+    const newEmployee = await connection.execute("INSERT INTO employee SET ?", {
+        first_name: answers.firstName,
+        last_name: answers.lastName,
+        role_id: answers.employeeRole,
+        manager_id: answers.managerID
+    });
 
+    console.log(`${answers.firstName} ${answers.lastName} has been successfully added.`);
 
-        runProgram()
-    })
-}
+    // console.log(answers);
+    // const firstName = answers.firstName;
+    // const lastName = answers.lastName;
+    // const roleID = answers.employeeRole;
+    // const managerID = answers.employeeManager;
+    // const query = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUE (${firstName}, ${lastName}, ${roleID}, ${managerID})`;
 
+    // console.log(query);
 
+    runProgram()
+};
 
-async function displayRoles() {
-
-    const connection = await mysql.createConnection({host:'localhost', user: 'root', database: 'employee_db'});
-  // query database
-  const [rows, fields] = await connection.execute("select * from role;");
-
-  console.table(rows);
-  runProgram();
-}
-
-
-
-async function updateRole() {
+async function updateEmployeeRole() {
 
     const connection = await mysql.createConnection({host:'localhost', user: 'root', database: 'employee_db'});
   // query database
@@ -120,9 +131,30 @@ async function updateRole() {
     choices: newChoices
   }])
   console.log(choice)
+  
+  runProgram();
+};
 
-}
+async function displayRoles() {
 
+    const connection = await mysql.createConnection({host:'localhost', user: 'root', database: 'employee_db'});
+  // query database
+  const [rows, fields] = await connection.execute("select * from role;");
+
+  console.table(rows);
+  runProgram();
+};
+
+
+async function addRole() {
+
+    const connection = await mysql.createConnection({host:'localhost', user: 'root', database: 'employee_db'});
+  // query database
+  const [rows, fields] = await connection.execute("select * from employee;");
+
+  console.table(rows);
+  runProgram();
+};
 
 async function displayDepartments() {
 
@@ -132,4 +164,24 @@ async function displayDepartments() {
 
   console.table(rows);
   runProgram();
-}
+};
+
+async function addDepartment() {
+
+    const connection = await mysql.createConnection({host:'localhost', user: 'root', database: 'employee_db'});
+  
+      const {answers} = await inquirer.prompt([
+          { 
+              name: "departmentName",
+              type: "input",
+              message: "Enter the department's name:"
+          }
+      ])
+      const newDepartment = await connection.execute("INSERT INTO department SET ?", {
+          name: answers.departmentName,
+      });
+  
+      console.log(`${answers.departmentName} has been successfully added.`);
+
+      runProgram();
+};
