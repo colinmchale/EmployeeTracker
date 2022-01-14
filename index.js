@@ -1,13 +1,5 @@
 const inquirer = require("inquirer");
-const mysql = require("mysql2/promise");
-const express = require('express');
-
-const PORT = process.env.PORT || 3001;
-const app = express();
-
-// Express middleware
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
+const mysql = require("mysql2");
 
 const db = mysql.createConnection(
     {
@@ -16,22 +8,25 @@ const db = mysql.createConnection(
       user: 'root',
       // MySQL password
       password: '',
-      database: 'employee_db'
-    },
+      database: 'employee_db',
+      port: 3306,
+    }
   );
 
+db.connect((err) => {
+    if (err) throw err;
+    runProgram();
+});
 
-runProgram();
-
-async function runProgram() {
-    inquirer.prompt({
+function runProgram() {
+    inquirer.prompt([{
         name: "choice",
         type: "list",
         message: "What would you like to do?",
         choices: ["View All Employees", "Add Employee", "Update Employee Role", "View All Roles", "Add Role", "View All Departments", "Add Department", "Quit"]
-    }).then((answer) =>{
-
-         switch (answer) {
+    }]).then((answer) =>{
+        console.log(answer);
+         switch (answer.choice) {
         case "View All Employees":
                 displayEmployees()
             break;
@@ -60,14 +55,12 @@ async function runProgram() {
     })
 };
 
-async function displayEmployees() {
-
-    const connection = await mysql.createConnection({host:'localhost', user: 'root', database: 'employee_db'});
-  // query database
-  const [rows, fields] = await connection.execute("select employee.id, employee.first_name, employee.last_name, role.title, department.name as department, role.salary from employee inner join role on (role.id = employee.role_id) inner join department on (department.id = role.department_id) order by employee.id");
-
-  console.table(rows);
-  runProgram();
+function displayEmployees() {
+  db.query('select employee.id, employee.first_name, employee.last_name, role.title, department.name as department, role.salary from employee inner join role on (role.id = employee.role_id) inner join department on (department.id = role.department_id) order by employee.id', (err, results) => {
+    if (err) throw err;
+    console.table(results);
+    runProgram();
+  });
 };
 
 async function addEmployee() {
