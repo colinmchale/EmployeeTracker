@@ -1,18 +1,37 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql2/promise");
+const express = require('express');
+
+const PORT = process.env.PORT || 3001;
+const app = express();
+
+// Express middleware
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+
+const db = mysql.createConnection(
+    {
+      host: 'localhost',
+      // MySQL username,
+      user: 'root',
+      // MySQL password
+      password: '',
+      database: 'employee_db'
+    },
+  );
+
 
 runProgram();
 
 async function runProgram() {
-    const {choice} = await inquirer.prompt([{
+    inquirer.prompt({
         name: "choice",
         type: "list",
         message: "What would you like to do?",
         choices: ["View All Employees", "Add Employee", "Update Employee Role", "View All Roles", "Add Role", "View All Departments", "Add Department", "Quit"]
-    }])
-    console.log(choice)
+    }).then((answer) =>{
 
-    switch (choice) {
+         switch (answer) {
         case "View All Employees":
                 displayEmployees()
             break;
@@ -37,14 +56,15 @@ async function runProgram() {
 
         default:
             break;
-    }
+        }    
+    })
 };
 
 async function displayEmployees() {
 
     const connection = await mysql.createConnection({host:'localhost', user: 'root', database: 'employee_db'});
   // query database
-  const [rows, fields] = await connection.execute("select * from employee;");
+  const [rows, fields] = await connection.execute("select employee.id, employee.first_name, employee.last_name, role.title, department.name as department, role.salary from employee inner join role on (role.id = employee.role_id) inner join department on (department.id = role.department_id) order by employee.id");
 
   console.table(rows);
   runProgram();
@@ -139,7 +159,7 @@ async function displayRoles() {
 
     const connection = await mysql.createConnection({host:'localhost', user: 'root', database: 'employee_db'});
   // query database
-  const [rows, fields] = await connection.execute("select * from role;");
+  const [rows, fields] = await connection.execute("select role.id, role.title, role.salary, department.name from role inner join department on (role.department_id = department.id) order by role.id;");
 
   console.table(rows);
   runProgram();
@@ -160,7 +180,7 @@ async function displayDepartments() {
 
     const connection = await mysql.createConnection({host:'localhost', user: 'root', database: 'employee_db'});
   // query database
-  const [rows, fields] = await connection.execute("select * from department;");
+  const [rows, fields] = await connection.execute("select * from department order by id;");
 
   console.table(rows);
   runProgram();
@@ -177,7 +197,8 @@ async function addDepartment() {
               message: "Enter the department's name:"
           }
       ])
-      const newDepartment = await connection.execute("INSERT INTO department SET ?", {
+
+      const newDepartment = await connection.query("INSERT INTO department SET ?",  {
           name: answers.departmentName,
       });
   
