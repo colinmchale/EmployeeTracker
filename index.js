@@ -148,15 +148,13 @@ async function updateEmployeeRole() {
   runProgram();
 };
 
-async function displayRoles() {
-
-    const connection = await mysql.createConnection({host:'localhost', user: 'root', database: 'employee_db'});
-  // query database
-  const [rows, fields] = await connection.execute("select role.id, role.title, role.salary, department.name from role inner join department on (role.department_id = department.id) order by role.id;");
-
-  console.table(rows);
-  runProgram();
-};
+function displayRoles() {
+    db.query('select role.id, role.title, role.salary, department.name from role inner join department on (role.department_id = department.id) order by role.id;', (err, results) => {
+      if (err) throw err;
+      console.table(results);
+      runProgram();
+    });
+  };
 
 
 async function addRole() {
@@ -169,15 +167,13 @@ async function addRole() {
   runProgram();
 };
 
-async function displayDepartments() {
-
-    const connection = await mysql.createConnection({host:'localhost', user: 'root', database: 'employee_db'});
-  // query database
-  const [rows, fields] = await connection.execute("select * from department order by id;");
-
-  console.table(rows);
-  runProgram();
-};
+function displayDepartments() {
+    db.query('select * from department order by id;', (err, results) => {
+      if (err) throw err;
+      console.table(results);
+      runProgram();
+    });
+  };
 
 async function addDepartment() {
 
