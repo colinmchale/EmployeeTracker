@@ -25,7 +25,7 @@ function runProgram() {
         message: "What would you like to do?",
         choices: ["View All Employees", "Add Employee", "Update Employee Role", "View All Roles", "Add Role", "View All Departments", "Add Department", "Quit"]
     }]).then((answer) =>{
-        console.log(answer);
+        // console.log(answer);
          switch (answer.choice) {
         case "View All Employees":
                 displayEmployees()
@@ -56,7 +56,7 @@ function runProgram() {
 };
 
 function displayEmployees() {
-  db.query('select employee.id, employee.first_name, employee.last_name, role.title, department.name as department, role.salary from employee inner join role on (role.id = employee.role_id) inner join department on (department.id = role.department_id) order by employee.id', (err, results) => {
+  db.query('SELECT employees.id, CONCAT(employees.first_name, " ", employees.last_name) AS name, role.title, department.name as department, role.salary, CONCAT(managers.first_name, " ", managers.last_name) AS manager FROM employee employees LEFT JOIN employee managers ON managers.id = employees.manager_id INNER JOIN role ON (role.id = employees.role_id) INNER JOIN department ON (department.id = role.department_id) ORDER BY employees.id', (err, results) => {
     if (err) throw err;
     console.table(results);
     runProgram();
@@ -65,65 +65,82 @@ function displayEmployees() {
 
 async function addEmployee() {
 
-    const connection = await mysql.createConnection({host:'localhost', user: 'root', database: 'employee_db'});
-  // query database
-const managers = await connection.execute("select * from employee;");
-
-const roles = await connection.execute("select * from role;");
-
-    const answers = await inquirer.prompt([
-        { 
-            name: "firstName",
-            type: "input",
-            message: "Enter the employee's first name:"
-        },
-        {
-            name: "lastName",
-            type: "input",
-            message: "Enter the employee's last name:"
-        },
-        {
-            name: "employeeRole",
-            type: "list",
-            message: "Select the employee's role:",
-            choices: roles.map((role) => {
-                return {
-                    name: role.title,
-                    value: role.id
+    db.query('SELECT id, title AS role FROM role ORDER BY id;', (err, roles) => {
+        if (err) throw err;
+        db.query('SELECT id, CONCAT(first_name, " ", last_name) AS name, manager_id FROM employee ORDER BY id;', (err, managers) => {
+            if (err) throw err;
+            console.table(managers)
+    
+            inquirer.prompt([
+                { 
+                    name: "firstName",
+                    type: "input",
+                    message: "Enter the employee's first name:"
+                },
+                {
+                    name: "lastName",
+                    type: "input",
+                    message: "Enter the employee's last name:"
+                },
+                {
+                    name: "employeeRole",
+                    type: "list",
+                    message: "Select the employee's role:",
+                    choices: function() {
+                        let roleArray = [];
+                        for (let i = 0; i < roles.length; i++) {
+                            roleArray.push(roles[i].role)
+                        } return roleArray;
+                    },
+                },
+                {
+                    name: "employeeManager",
+                    type: "list",
+                    message: "Select the employee's manager:",
+                    choices: function() {
+                        let managerArray = ["NONE"];
+                        for (let k = 0; k < managers.length; k++) {
+                            managerArray.push(managers[k].name)
+                        } return managerArray;
+                    },
                 }
+                ]).then((newEmployee) => {
+                    let role_id;
+                    let manager_id;
+                    for (let j = 0; j < roles.length; j++) {
+                        // console.log(newEmployee.employeeRole);
+                        // console.log(roles[j].role);
+                        // console.log(roles[j].id);
+                     if (roles[j].role == newEmployee.employeeRole) {
+                        role_id = roles[j].id
+                     }
+                    }
+                    for (let f = 0; f < managers.length; f++) {
+                        // console.log(newEmployee.employeeManager);
+                        console.log(managers[f].name);
+                        // console.log(roles[f].id);
+                     if (managers[f].name == newEmployee.employeeManager) {
+                        manager_id = managers[f].id
+                     }
+                    }
+                    if (newEmployee.employeeManager == 'NONE') {
+                        manager_id = null
+                    }
+                    // console.log(role_id);
+                    // console.log(manager_id);
+                    // console.log(newEmployee.firstName);
+                    // console.log(newEmployee.lastName);
+                    db.query('INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?);', [
+                        newEmployee.firstName,
+                        newEmployee.lastName,
+                        role_id,
+                        manager_id
+                    ]),
+                        console.log(`${newEmployee.firstName} has been successfully added.`);
+                        runProgram(); 
             })
-        },
-        {
-            name: "employeeManager",
-            type: "input",
-            message: "Select the employee's manager:",
-            choices: managers.map((manager) => {
-                return {
-                    name: manager.first_name + " " + manager.last_name,
-                    value: manager.id
-                }
-            })
-        }
-    ])
-    const newEmployee = await connection.execute("INSERT INTO employee SET ?", {
-        first_name: answers.firstName,
-        last_name: answers.lastName,
-        role_id: answers.employeeRole,
-        manager_id: answers.managerID
-    });
-
-    console.log(`${answers.firstName} ${answers.lastName} has been successfully added.`);
-
-    // console.log(answers);
-    // const firstName = answers.firstName;
-    // const lastName = answers.lastName;
-    // const roleID = answers.employeeRole;
-    // const managerID = answers.employeeManager;
-    // const query = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUE (${firstName}, ${lastName}, ${roleID}, ${managerID})`;
-
-    // console.log(query);
-
-    runProgram()
+        })
+    })
 };
 
 async function updateEmployeeRole() {
@@ -149,7 +166,7 @@ async function updateEmployeeRole() {
 };
 
 function displayRoles() {
-    db.query('select role.id, role.title, role.salary, department.name from role inner join department on (role.department_id = department.id) order by role.id;', (err, results) => {
+    db.query('SELECT role.id, role.title, role.salary, department.name FROM role INNER JOIN department ON (role.department_id = department.id) ORDER BY role.id;', (err, results) => {
       if (err) throw err;
       console.table(results);
       runProgram();
@@ -204,7 +221,6 @@ function addRole() {
                     console.log(`${newRole.roleTitle} has been successfully added.`);
                     runProgram(); 
             })
-                 
     })
 };
 
