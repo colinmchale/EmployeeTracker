@@ -154,44 +154,80 @@ function displayRoles() {
       console.table(results);
       runProgram();
     });
-  };
+};
 
 
-async function addRole() {
+function addRole() {
+    db.query('SELECT id, name AS department FROM department ORDER BY id;', (err, departments) => {
+        if (err) throw err;
 
-    const connection = await mysql.createConnection({host:'localhost', user: 'root', database: 'employee_db'});
-  // query database
-  const [rows, fields] = await connection.execute("select * from employee;");
-
-  console.table(rows);
-  runProgram();
+        inquirer.prompt([
+                { 
+                    name: "roleTitle",
+                    type: "input",
+                    message: "Enter the new role's name:"
+                },
+                { 
+                    name: "roleSalary",
+                    type: "input",
+                    message: "Enter the role's salary amount:"
+                },
+                { 
+                    name: "roleDept",
+                    type: "list",
+                    message: "Please select the department this role belongs to:",
+                    choices: function() {
+                        let deptArray = [];
+                        for (let i = 0; i < departments.length; i++) {
+                            deptArray.push(departments[i].department)
+                        } return deptArray;
+                    },
+                }
+            ]).then((newRole) => {
+                let dept_id;
+                for (let j = 0; j < departments.length; j++) {
+                    // console.log(newRole.roleDept);
+                    // console.log(departments[j].department);
+                    // console.log(departments[j].id);
+                 if (departments[j].department == newRole.roleDept) {
+                    dept_id = departments[j].id
+                 }
+                }
+                console.log(dept_id);
+                console.log(newRole.roleTitle);
+                console.log(newRole.roleSalary);
+                db.query('INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?);', [
+                    newRole.roleTitle,
+                    newRole.roleSalary,
+                    dept_id
+                ]),
+                    console.log(`${newRole.roleTitle} has been successfully added.`);
+                    runProgram(); 
+            })
+                 
+    })
 };
 
 function displayDepartments() {
-    db.query('select * from department order by id;', (err, results) => {
+    db.query('SELECT id, name AS department FROM department ORDER BY id;', (err, results) => {
       if (err) throw err;
       console.table(results);
       runProgram();
     });
-  };
+};
 
-async function addDepartment() {
-
-    const connection = await mysql.createConnection({host:'localhost', user: 'root', database: 'employee_db'});
-  
-      const {answers} = await inquirer.prompt([
+function addDepartment() {
+ inquirer.prompt([
           { 
               name: "departmentName",
               type: "input",
-              message: "Enter the department's name:"
+              message: "Enter the new department's name:"
           }
-      ])
-
-      const newDepartment = await connection.query("INSERT INTO department SET ?",  {
-          name: answers.departmentName,
-      });
-  
-      console.log(`${answers.departmentName} has been successfully added.`);
-
-      runProgram();
+      ]).then((newDept) => {
+          db.query("INSERT INTO department(name) VALUES (?);", [
+              newDept.departmentName,
+          ])
+          console.log(`${newDept.departmentName} has been successfully added.`);
+          runProgram();  
+      })      
 };
