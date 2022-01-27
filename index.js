@@ -208,7 +208,7 @@ async function updateEmployeeRole() {
 };
 
 function displayRoles() {
-    db.query('SELECT role.id, role.title, role.salary, department.name FROM role INNER JOIN department ON (role.department_id = department.id) ORDER BY role.id;', (err, results) => {
+    db.query('SELECT role.id, role.title, role.salary, department.name as department FROM role INNER JOIN department ON (role.department_id = department.id) ORDER BY role.id;', (err, results) => {
       if (err) throw err;
       console.table(results);
       runProgram();
@@ -252,9 +252,9 @@ function addRole() {
                     dept_id = departments[j].id
                  }
                 }
-                console.log(dept_id);
-                console.log(newRole.roleTitle);
-                console.log(newRole.roleSalary);
+                // console.log(dept_id);
+                // console.log(newRole.roleTitle);
+                // console.log(newRole.roleSalary);
                 db.query('INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?);', [
                     newRole.roleTitle,
                     newRole.roleSalary,
