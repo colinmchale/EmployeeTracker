@@ -69,7 +69,6 @@ async function addEmployee() {
         if (err) throw err;
         db.query('SELECT id, CONCAT(first_name, " ", last_name) AS name, manager_id FROM employee ORDER BY id;', (err, managers) => {
             if (err) throw err;
-            console.table(managers)
     
             inquirer.prompt([
                 { 
@@ -117,7 +116,7 @@ async function addEmployee() {
                     }
                     for (let f = 0; f < managers.length; f++) {
                         // console.log(newEmployee.employeeManager);
-                        console.log(managers[f].name);
+                        // console.log(managers[f].name);
                         // console.log(roles[f].id);
                      if (managers[f].name == newEmployee.employeeManager) {
                         manager_id = managers[f].id
@@ -145,24 +144,67 @@ async function addEmployee() {
 
 async function updateEmployeeRole() {
 
-    const connection = await mysql.createConnection({host:'localhost', user: 'root', database: 'employee_db'});
-  // query database
-  const [rows, fields] = await connection.execute("select * from employee;");
-
-  let newChoices = rows.map(employee => ({name:employee.name, value:employee}))
-
-
-  console.table();
-
-  const {choice} = await inquirer.prompt([{
-    name: "choice",
-    type: "list",
-    message: "Which Employee Role would you like to update?",
-    choices: newChoices
-  }])
-  console.log(choice)
-  
-  runProgram();
+    db.query('SELECT id, CONCAT(first_name, " ", last_name) AS name FROM employee ORDER BY id;', (err, employees) => {
+        if (err) throw err;
+        db.query('SELECT id, title AS role FROM role ORDER BY id;', (err, roles) => {
+            if (err) throw err;
+    
+            inquirer.prompt([
+                {
+                    name: "selectEmployee",
+                    type: "list",
+                    message: "Select which employee you would like to update:",
+                    choices: function() {
+                        let empArray = [];
+                        for (let i = 0; i < employees.length; i++) {
+                            empArray.push(employees[i].name)
+                        } return empArray;
+                    },
+                },
+                {
+                    name: "employeeRole",
+                    type: "list",
+                    message: "Select the employee's new role:",
+                    choices: function() {
+                        let roleArray = [];
+                        for (let j = 0; j < roles.length; j++) {
+                            roleArray.push(roles[j].role)
+                        } return roleArray;
+                    },
+                },
+                ]).then((updateRole) => {
+                    let role_id;
+                    let employee_id;
+                    for (let j = 0; j < roles.length; j++) {
+                        // console.log(updateRole.employeeRole);
+                        // console.log(roles[j].role);
+                        // console.log(roles[j].id);
+                     if (roles[j].role == updateRole.employeeRole) {
+                        role_id = roles[j].id
+                     }
+                    }
+                    for (let f = 0; f < employees.length; f++) {
+                        // console.log(updateRole.employeeManager);
+                        // console.log(employees[f].name);
+                        // console.log(roles[f].id);
+                     if (employees[f].name == updateRole.selectEmployee) {
+                        employee_id = employees[f].id
+                     }
+                    }
+                    
+                    // console.log(role_id);
+                    // console.log(manager_id);
+                    // console.log(updateRole.firstName);
+                    // console.log(updateRole.lastName);
+                    db.query('UPDATE employee SET role_id = ? WHERE id = ?', [
+                        role_id,
+                        employee_id
+                    ]),
+                        console.log(`Role has been successfully updated.`);
+                        runProgram(); 
+            })
+        })
+    })
 };
 
 function displayRoles() {
