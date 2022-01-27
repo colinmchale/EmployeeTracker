@@ -16,8 +16,8 @@ This backend application was made to keep track of an employee database as a com
 Since this project is handled completely on the backend you will need to run "npm install" to download the necessary packages, which are inquirer and mysql2. To begin running the application after the packages are installed, run "node index.js" in the terminal and options should populate below.
 
 ## Usage  
-![Screenshot of App](f)
-f
+Here's a link video of the app.
+[Click Here](https://drive.google.com/file/d/1vhfD09EsVZH44BInlF5BtVExkfcyeQOm/view)
 
 ## License 
 Unlicense
